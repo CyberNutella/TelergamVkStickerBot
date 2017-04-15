@@ -18,8 +18,9 @@ namespace TelergamVkStickerBot
   public struct Attachment
   {
     public AttachmentsType Type;
-    public Uri Instance;
-    public MediaAttachment InstanceVk;
+    public string FileName;
+    public string RepresentationTg;
+    public MediaAttachment RepresentationVk;
   }
 
   public class Message

@@ -8,15 +8,16 @@ namespace TelergamVkStickerBot.Bots
 {
   public class Bot
   {
-    VkBot vkBot = new VkBot();
+//    VkBot vkBot = new VkBot();
     TelergammBot tgBot = new TelergammBot();
 
     public Bot()
     {
-      vkBot.MessageCallblack = VkMessageCallblack;
+//      vkBot.MessageCallblack = VkMessageCallblack;
+      tgBot.MessageCallblack = TgMessageCallblack;
       // и похуй что это не статический метод, // <3 C#
     }
-
+/*
     public void VkMessageCallblack(Message message)
     {
       if (message.Text.Contains("!pic"))
@@ -39,6 +40,7 @@ namespace TelergamVkStickerBot.Bots
       //if (msg.Attachments.First().Type == AttachmentsType.Sticker)
       //  vkBot.GetImage(msg.Attachments.First()).Save("ALLAH.PNG");
     }
+*/
 
     public List<Tuple<long, long>> Chats;
 
@@ -47,13 +49,14 @@ namespace TelergamVkStickerBot.Bots
       //if ()
     }
 
-    public void Run()
+    public async void Run()
     {
       while (true)
       {
         try
         {
-          vkBot.Response();
+          // vkBot.Response();
+          await tgBot.Responce();
         }
         catch (Exception e)
         {

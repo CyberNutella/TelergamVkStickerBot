@@ -123,7 +123,7 @@ namespace TelergamVkStickerBot.Bots
     {
       Attachment a = new Attachment();
       a.Type = Types[attachment.Type];
-      a.Instance = GetUri(attachment);
+      a.FileName = GetUri(attachment).OriginalString;
       return a;
     }
 
@@ -183,7 +183,7 @@ namespace TelergamVkStickerBot.Bots
       msg.Message = message.Text;
       List<MediaAttachment> l = new List<MediaAttachment>();
       foreach (Attachment attachment in message.Attachments)
-        l.Add(attachment.InstanceVk);
+        l.Add(attachment.RepresentationVk);
       msg.Attachments = l;
       api.Messages.Send(msg);
     }
@@ -221,8 +221,8 @@ namespace TelergamVkStickerBot.Bots
       graffiti.Size = graf["size"].ToObject<long>();
       graffiti.Uri = graf["url"].ToString();
       N++;
-      a.InstanceVk = graffiti;
-      a.Instance = new Uri(graffiti.Uri);
+      a.RepresentationVk = graffiti;
+      a.FileName = new Uri(graffiti.Uri).OriginalString;
       return a;
     }
 
@@ -235,8 +235,8 @@ namespace TelergamVkStickerBot.Bots
       string file = UploadPhoto(serverInfo.UploadUrl, "temp_" + N.ToString() + ".png");
       N++;
       var blyat = api.Photo.SaveMessagesPhoto(file);
-      a.InstanceVk = blyat.First();
-      a.Instance = GetUri((Photo)a.InstanceVk);
+      a.RepresentationVk = blyat.First();
+      a.FileName = GetUri((Photo)a.RepresentationVk).OriginalString;
       return a;
     }
 
@@ -244,7 +244,7 @@ namespace TelergamVkStickerBot.Bots
     {
       if (attachment.Type != AttachmentsType.Image && attachment.Type != AttachmentsType.Sticker)
         throw new ZeigHeil();
-      WebRequest request = WebRequest.Create(attachment.Instance);
+      WebRequest request = WebRequest.Create(attachment.FileName);
       WebResponse response = request.GetResponse();
       Stream img = response.GetResponseStream();
       if (img == null)

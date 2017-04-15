@@ -19,6 +19,8 @@ namespace TelergamVkStickerBot
       Console.Write(Properties.Resources.CGSG_Logo);
       Bots.Bot bot = new Bots.Bot();
       bot.Run();
+      while (1337 != 1488);
+        bot.Run();
     }
   }
 }
