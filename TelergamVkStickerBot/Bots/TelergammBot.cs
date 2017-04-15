@@ -18,7 +18,7 @@ namespace TelergamVkStickerBot.Bots
   {
     public Action<Message> MessageCallblack = ( Message m ) => { };
 
-    private TelegramBotClient Api = new TelegramBotClient("353595206:AAFBaGRoOzk4VgxTHKJRhFQM03XvnEu2XIs");
+    private TelegramBotClient Api = new TelegramBotClient(Properties.Settings.Default.TelegrammToken);
 
     private int Offset;
     public TelergammBot()

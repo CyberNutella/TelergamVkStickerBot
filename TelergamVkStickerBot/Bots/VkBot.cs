@@ -137,8 +137,8 @@ namespace TelergamVkStickerBot.Bots
       api.Authorize(new ApiAuthParams()
       {
         ApplicationId = 5977261,
-        Login = "89111121547",
-        Password = "cgsgforever1337!",
+        Login = Properties.Settings.Default.VkLogin,
+        Password = Properties.Settings.Default.VkPassword,
         Settings = Settings.All
       });
       // Get last message

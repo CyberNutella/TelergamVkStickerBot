@@ -38,8 +38,7 @@
       // 
       // picCaptcha
       // 
-      this.picCaptcha.Dock = System.Windows.Forms.DockStyle.Top;
-      this.picCaptcha.Image = global::TelergamVkStickerBot.Properties.Resources.cgsg;
+      this.picCaptcha.Dock = System.Windows.Forms.DockStyle.Top;                     
       this.picCaptcha.Location = new System.Drawing.Point(0, 0);
       this.picCaptcha.Name = "picCaptcha";
       this.picCaptcha.Size = new System.Drawing.Size(284, 150);
