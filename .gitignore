@@ -260,3 +260,6 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+/TelergamVkStickerBot/App.config
+/TelergamVkStickerBot/Properties/Settings.settings
+/TelergamVkStickerBot/Properties/Settings.Designer.cs
