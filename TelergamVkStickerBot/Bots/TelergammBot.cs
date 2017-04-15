@@ -106,22 +106,12 @@ namespace TelergamVkStickerBot.Bots
             break;
         }
 
+        await Api.SendTextMessageAsync(M.ChatId, M.From + M.Text);
+
         MessageCallblack(M);
 
         if (x[0].Id > Offset)
           Offset = x[0].Id;
-      }
-    }
-
-    public async Task SendMessage( Message M )
-    {
-      await Api.SendTextMessageAsync(M.ChatId, M.From + "\n" + M.Text);
-
-      foreach (Attachment Att in M.Attachments)
-      {
-        switch (Att.Type)
-        {
-        }
       }
     }
 
