@@ -35,7 +35,7 @@ namespace TelergamVkStickerBot.Bots
         Message M = new Message();
         Telegram.Bot.Types.Message TgM = x[0].Message;
 
-        M.From = TgM.From.FirstName + " " + TgM.From.LastName + "(" + TgM.From.Username + ")";
+        M.From = TgM.From.FirstName + " " + TgM.From.LastName + "(@" + TgM.From.Username + ")";
         M.Text = "";
         M.ChatId = TgM.Chat.Id;
 

@@ -22,8 +22,10 @@ namespace TelergamVkStickerBot.Bots
     }
 
     List<Association> Associations = new List<Association>(); // List for slow search, when checking group name while creating unique id, 
+    List<Association> HalfLife = new List<Association>();     // List for storing half-live(one-side) associations, which are in state of pairing
     Hashtable VkToTg = new Hashtable(); // Hashtables for adamantine-cyber-extra-supreme-mega-gold-ultra-fast Id translations
     Hashtable TgToVk = new Hashtable();
+    Random IdGen = new Random(); // Random instance
 
     public Bot()
     {
@@ -85,11 +87,53 @@ cake#1477; Vk:11, Tg:47
     }
 */
 
-    public List<Tuple<long, long>> Chats;
-
     public void TgMessageCallblack(Message msg)
     {
-      //if ()
+      if (msg.Text.StartsWith("/start ") && !msg.Text.Contains('#'))
+      {
+        Message M = new Message();
+        M.ChatId = msg.ChatId;
+        M.From = "";
+
+        Association NewAss = new Association();
+        NewAss.BethesdaName = msg.Text.Substring(msg.Text.LastIndexOf("/start ") + "/start ".Length);
+        NewAss.TgId = msg.ChatId;
+        NewAss.VkId = -1;
+
+        bool found = false;
+        long ddos_defence = 0;
+        while (!found && ddos_defence < 5000)
+        {
+          NewAss.UniqueId = IdGen.Next(0, 10000);
+
+          bool sovpadenie = false;
+          foreach (Association Ass in Associations)
+            if (Ass.BethesdaName == NewAss.BethesdaName && Ass.UniqueId == NewAss.UniqueId)
+              sovpadenie = true;
+
+          if (!sovpadenie)
+            found = true;
+          ddos_defence++;
+        }
+
+        if (found)
+          HalfLife.Add(NewAss);
+
+        if (found)
+          M.Text = "Creating group association with name: " + NewAss.BethesdaName + "#" + NewAss.UniqueId;
+        else
+          M.Text = "Failed. Try another name.";
+
+        tgBot.SendMessage(M);
+        return;
+      }
+
+      if (msg.Text.StartsWith("/start ") && msg.Text.Contains('#'))
+      {
+        
+      }
+
+      tgBot.SendMessage(msg);
     }
 
     public async void Run()
