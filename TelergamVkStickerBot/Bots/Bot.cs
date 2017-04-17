@@ -10,7 +10,7 @@ namespace TelergamVkStickerBot.Bots
 {
   public class Bot
   {
-//    VkBot vkBot = new VkBot();
+    VkBot vkBot = new VkBot();
     TelergammBot tgBot = new TelergammBot();
 
     public class Association
@@ -38,6 +38,10 @@ test#1337; Vk:02, Tg:39
 test#1477; Vk:59, Tg:30
 cake#1477; Vk:11, Tg:47
  */
+      Directory.CreateDirectory("Data");
+      FileStream a = new FileStream("Data/Associations.txt", FileMode.OpenOrCreate);
+      a.Close();
+
       string []AssTexts = File.ReadAllLines("Data/Associations.txt", System.Text.Encoding.UTF8);
 
       foreach (string AssText in AssTexts)
@@ -58,11 +62,11 @@ cake#1477; Vk:11, Tg:47
         TgToVk.Add(Ass.TgId, Ass);
       }
 
-//      vkBot.MessageCallblack = VkMessageCallblack;
+      vkBot.MessageCallblack = VkMessageCallblack;
       tgBot.MessageCallblack = TgMessageCallblack;
       // и похуй что это не статический метод, // <3 C#
     }
-/*
+
     public void VkMessageCallblack(Message message)
     {
       if (message.Text.Contains("!pic"))
@@ -85,7 +89,6 @@ cake#1477; Vk:11, Tg:47
       //if (msg.Attachments.First().Type == AttachmentsType.Sticker)
       //  vkBot.GetImage(msg.Attachments.First()).Save("ALLAH.PNG");
     }
-*/
 
     public void TgMessageCallblack(Message msg)
     {
@@ -136,14 +139,14 @@ cake#1477; Vk:11, Tg:47
       tgBot.SendMessage(msg);
     }
 
-    public async void Run()
+    public void Run()
     {
       while (true)
       {
         try
         {
-          // vkBot.Response();
-          await tgBot.Responce();
+          vkBot.Response();
+          tgBot.Responce();
         }
         catch (Exception e)
         {

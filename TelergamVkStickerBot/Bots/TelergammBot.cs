@@ -26,9 +26,23 @@ namespace TelergamVkStickerBot.Bots
       Api.StartReceiving();
       Offset = Api.MessageOffset;
     }
-    public async Task Responce()
+    public void Responce()
     {
-      Update[] x = await Api.GetUpdatesAsync(Offset, 1);
+      Task<Update[]> xa = Api.GetUpdatesAsync(Offset, 1);
+
+      try {
+        xa.Wait();
+      } catch {};
+
+      if (xa.IsFaulted)
+      {
+        Api.StopReceiving();
+        Api.StartReceiving();
+        Offset = Api.MessageOffset;
+        return;
+      }
+
+      Update []x = xa.Result;
 
       if (x.GetLength(0) == 1 && x[0].Type == UpdateType.MessageUpdate)
       {
