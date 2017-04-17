@@ -20,111 +20,93 @@ namespace TelergamVkStickerBot.Bots
 
     private TelegramBotClient Api = new TelegramBotClient(Properties.Settings.Default.TelegrammToken);
 
-    private int Offset;
+    private void MessageCallbleck( object A, MessageEventArgs Args )
+    {
+      Message M = new Message();
+      Telegram.Bot.Types.Message TgM = Args.Message;
+
+      M.From = TgM.From.FirstName + " " + TgM.From.LastName + "(@" + TgM.From.Username + ")";
+      M.Text = "";
+      M.ChatId = TgM.Chat.Id;
+
+      Attachment Att = new Attachment();
+
+      switch (TgM.Type)
+      {
+        case MessageType.AudioMessage:
+          Att.Type = AttachmentsType.Audio;
+          Att.RepresentationTg = TgM.Audio.FileId;
+          M.Attachments.Add(Att);
+          M.Text = TgM.Audio.Performer + " - " + TgM.Audio.Title + " (" + TgM.Audio.Duration + ")";
+          break;
+        case MessageType.ContactMessage:
+          M.Text = "has shared contact data of " + TgM.Contact.FirstName + " " + TgM.Contact.LastName + ":\n  Phone: " + TgM.Contact.PhoneNumber + "\n  Telegram: " + TgM.Contact.UserId;
+          break;
+        case MessageType.DocumentMessage:
+          Att.Type = AttachmentsType.File;
+          Att.RepresentationTg = TgM.Document.FileId;
+          M.Attachments.Add(Att);
+          M.Text = "has shared document: \"" + TgM.Document.FileName + "\" Type is \"" + TgM.Document.MimeType + "\"";
+          break;
+        case MessageType.LocationMessage:
+          M.Text = "has shared location:\n  Latitude is " + TgM.Location.Latitude + "\n  Longtitude is " + TgM.Location.Longitude;
+          break;
+        case MessageType.PhotoMessage:
+          Att.Type = AttachmentsType.Image;
+          PhotoSize BestPhoto = TgM.Photo[0];
+          foreach (PhotoSize Photo in TgM.Photo)
+            if (Photo.Width > BestPhoto.Width || Photo.Height > BestPhoto.Height)
+              BestPhoto = Photo;
+          Att.RepresentationTg = BestPhoto.FileId;
+          M.Attachments.Add(Att);
+          M.Text = TgM.Caption;
+          break;
+        case MessageType.ServiceMessage:
+          if (TgM.DeleteChatPhoto)
+            M.Text = "Deleted chat photo((";
+          /*
+
+
+
+            A VERE HUTCH TU DU FOR SERVES MESADGES
+
+
+
+            */
+
+          break;
+        case MessageType.StickerMessage:
+          Att.Type = AttachmentsType.Sticker;
+          Att.RepresentationTg = TgM.Sticker.FileId;
+          M.Attachments.Add(Att);
+          break;
+        case MessageType.TextMessage:
+          M.Text = TgM.Text;
+          break;
+        case MessageType.VideoMessage:
+          Att.Type = AttachmentsType.Video;
+          Att.RepresentationTg = TgM.Video.FileId;
+          M.Attachments.Add(Att);
+          M.Text = "has sent some video (" + TgM.Audio.Duration + ")";
+          break;
+        case MessageType.VoiceMessage:
+          Att.Type = AttachmentsType.Audio;
+          Att.RepresentationTg = TgM.Voice.FileId;
+          M.Text = "has sent some voice message (" + TgM.Audio.Duration + ")";
+          break;
+      }
+
+      MessageCallblack(M);
+
+    }
     public TelergammBot()
     {
+      Api.OnMessage += new EventHandler<MessageEventArgs>(MessageCallbleck);
       Api.StartReceiving();
-      Offset = Api.MessageOffset;
     }
+
     public void Responce()
     {
-      Task<Update[]> xa = Api.GetUpdatesAsync(Offset, 1);
-
-      try {
-        xa.Wait();
-      } catch {};
-
-      if (xa.IsFaulted)
-      {
-        Api.StopReceiving();
-        Api.StartReceiving();
-        Offset = Api.MessageOffset;
-        return;
-      }
-
-      Update []x = xa.Result;
-
-      if (x.GetLength(0) == 1 && x[0].Type == UpdateType.MessageUpdate)
-      {
-        Message M = new Message();
-        Telegram.Bot.Types.Message TgM = x[0].Message;
-
-        M.From = TgM.From.FirstName + " " + TgM.From.LastName + "(@" + TgM.From.Username + ")";
-        M.Text = "";
-        M.ChatId = TgM.Chat.Id;
-
-        Attachment Att = new Attachment();
-
-        switch (TgM.Type)
-        {
-          case MessageType.AudioMessage:
-            Att.Type = AttachmentsType.Audio;
-            Att.RepresentationTg = TgM.Audio.FileId;
-            M.Attachments.Add(Att);
-            M.Text = TgM.Audio.Performer + " - " + TgM.Audio.Title + " (" + TgM.Audio.Duration + ")";
-            break;
-          case MessageType.ContactMessage:
-            M.Text = "has shared contact data of " + TgM.Contact.FirstName + " " + TgM.Contact.LastName + ":\n  Phone: " + TgM.Contact.PhoneNumber + "\n  Telegram: " + TgM.Contact.UserId;
-            break;
-          case MessageType.DocumentMessage:
-            Att.Type = AttachmentsType.File;
-            Att.RepresentationTg = TgM.Document.FileId;
-            M.Attachments.Add(Att);
-            M.Text = "has shared document: \"" + TgM.Document.FileName + "\" Type is \"" + TgM.Document.MimeType + "\"";
-            break;
-          case MessageType.LocationMessage:
-            M.Text = "has shared location:\n  Latitude is " + TgM.Location.Latitude + "\n  Longtitude is " + TgM.Location.Longitude;
-            break;
-          case MessageType.PhotoMessage:
-            Att.Type = AttachmentsType.Image;
-            PhotoSize BestPhoto = TgM.Photo[0];
-            foreach (PhotoSize Photo in TgM.Photo)
-              if (Photo.Width > BestPhoto.Width || Photo.Height > BestPhoto.Height)
-                BestPhoto = Photo;
-            Att.RepresentationTg = BestPhoto.FileId;
-            M.Attachments.Add(Att);
-            M.Text = TgM.Caption;
-            break;
-          case MessageType.ServiceMessage:
-            if (TgM.DeleteChatPhoto)
-              M.Text = "Deleted chat photo((";
-            /*
-
-
-
-             A VERE HUTCH TU DU FOR SERVES MESADGES
-
-
-
-             */
-
-            break;
-          case MessageType.StickerMessage:
-            Att.Type = AttachmentsType.Sticker;
-            Att.RepresentationTg = TgM.Sticker.FileId;
-            M.Attachments.Add(Att);
-            break;
-          case MessageType.TextMessage:
-            M.Text = TgM.Text;
-            break;
-          case MessageType.VideoMessage:
-            Att.Type = AttachmentsType.Video;
-            Att.RepresentationTg = TgM.Video.FileId;
-            M.Attachments.Add(Att);
-            M.Text = "has sent some video (" + TgM.Audio.Duration + ")";
-            break;
-          case MessageType.VoiceMessage:
-            Att.Type = AttachmentsType.Audio;
-            Att.RepresentationTg = TgM.Voice.FileId;
-            M.Text = "has sent some voice message (" + TgM.Audio.Duration + ")";
-            break;
-        }
-
-        MessageCallblack(M);
-
-        if (x[0].Id > Offset)
-          Offset = x[0].Id;
-      }
     }
 
     public async Task SendMessage( Message M )
