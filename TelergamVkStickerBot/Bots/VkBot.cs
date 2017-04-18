@@ -131,6 +131,8 @@ namespace TelergamVkStickerBot.Bots
 
     public Action<Message> MessageCallblack = (Message m) => { };
 
+    MessagesGetLongPollHistoryParams LongPollParams = new MessagesGetLongPollHistoryParams();
+
     public VkBot()
     {
       // Authorize
@@ -154,10 +156,19 @@ namespace TelergamVkStickerBot.Bots
       // А вдруг...
       if (!lastId.HasValue)
         throw new ZeigHeil();
-      LastMessage = lastId.GetValueOrDefault();
-    }
 
-    private long LastMessage;
+      LongPollServerResponse serv = api.Messages.GetLongPollServer(true, true);
+      LongPollParams.Pts = serv.Pts;
+      LongPollParams.Ts = serv.Ts;
+      LongPollParams.PreviewLength = 0;
+      LongPollParams.Onlines = false;
+      LongPollParams.EventsLimit = null;
+      UsersFields f = new UsersFields();
+      LongPollParams.Fields = f;
+      LongPollParams.MsgsLimit = null;
+      LongPollParams.MaxMsgId = lastId;
+
+    }
 
     private static Dictionary<Type, AttachmentsType> Types = new Dictionary<Type, AttachmentsType>()
     {
@@ -253,20 +264,28 @@ namespace TelergamVkStickerBot.Bots
     }
 
     private DateTime LastResponse = DateTime.Now;
+    private DateTime func(VkNet.Model.Message m)
+    {
+      return m.Date.GetValueOrDefault();
+    }
+
     public void Response()
     {
-      while (DateTime.Now - LastResponse < TimeSpan.FromSeconds(1 / 2.0))
+      while (DateTime.Now - LastResponse < TimeSpan.FromSeconds(1 / api.RequestsPerSecond + 0.01))
         ;
       LastResponse = DateTime.Now;
       api.Account.SetOnline(false);
-      MessagesGetObject msgs = api.Messages.Get(new MessagesGetParams()
+
+      LongPollHistoryResponse longpoll = api.Messages.GetLongPollHistory(LongPollParams);
+
+      LongPollParams.Pts = longpoll.NewPts;
+
+      longpoll.Messages.OrderBy(new Func<VkNet.Model.Message, DateTime>(func));
+
+      foreach (var message in longpoll.Messages)
       {
-        Count = 20,
-        Out = MessageType.Received,
-        LastMessageId = LastMessage
-      });
-      foreach (var message in msgs.Messages)
-      {
+        if (message.Type == MessageType.Sended)
+          continue;
         Message msg = new Message();
         msg.ChatId = message.ChatId.GetValueOrDefault(-message.UserId.GetValueOrDefault());
         msg.Text = message.Body;
@@ -274,8 +293,8 @@ namespace TelergamVkStickerBot.Bots
         msg.From = from.FirstName + " " + from.LastName;
         foreach (VkNet.Model.Attachments.Attachment attachment in message.Attachments)
           msg.Attachments.Add(TransformAttachment(attachment));
-        if (LastMessage < message.Id)
-          LastMessage = message.Id.GetValueOrDefault();
+        if (LongPollParams.MaxMsgId < message.Id)
+          LongPollParams.MaxMsgId = message.Id.GetValueOrDefault();
         MessageCallblack(msg);
         api.Messages.MarkAsRead(message.Id.GetValueOrDefault());
       }
