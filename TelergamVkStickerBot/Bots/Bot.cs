@@ -29,9 +29,6 @@ namespace TelergamVkStickerBot.Bots
 
     public Bot()
     {
-      /* 413r7 (ALERT) if you have not this file, code will throw some exceptions at you */
-      /* No time to fix */
-
       /* Associations file example */
 /*
 test#1337; Vk:02, Tg:39
@@ -46,6 +43,8 @@ cake#1477; Vk:11, Tg:47
 
       foreach (string AssText in AssTexts)
       {
+        if (AssText == "")
+          continue;
         Association Ass = new Association();
 
         Ass.BethesdaName = AssText.Split('#')[0];
@@ -64,11 +63,49 @@ cake#1477; Vk:11, Tg:47
 
       vkBot.MessageCallblack = VkMessageCallblack;
       tgBot.MessageCallblack = TgMessageCallblack;
-      // и похуй что это не статический метод, // <3 C#
+      // <3 C#
     }
 
     public void VkMessageCallblack(Message message)
     {
+      if (message.Text.StartsWith("/start ") && message.Text.Contains('#'))
+      {
+        string GroupName = message.Text.Substring(message.Text.LastIndexOf("/start ") + "/start ".Length).Split('#')[0];
+        long UniqueId = Int32.Parse(message.Text.Substring(message.Text.LastIndexOf("/start ") + "/start ".Length).Split('#')[1]);
+
+        Message M = new Message();
+        M.ChatId = message.ChatId;
+        M.From = "";
+
+        foreach (Association Ass in HalfLife)
+          if (Ass.BethesdaName == GroupName && Ass.UniqueId == UniqueId)
+          {
+            HalfLife.Remove(Ass);
+            if (Ass.VkId != -1)
+            {
+              M.Text = "Can't make association of two Vk groups";
+              vkBot.SendMessage(M);
+            }
+            Ass.VkId = message.ChatId;
+            Associations.Add(Ass);
+            string Lines = File.ReadAllText("Data/Associations.txt", System.Text.Encoding.UTF8);
+            Lines += "\n" + Ass.BethesdaName + "#" + Ass.UniqueId + "; Vk:" + Ass.VkId + ", Tg:" + Ass.TgId;
+            File.WriteAllText("Data/Associations.txt", Lines, System.Text.Encoding.UTF8);
+
+            VkToTg[Ass.VkId] = Ass;
+            TgToVk[Ass.TgId] = Ass;
+
+            M.Text = "Successfully paired";
+            vkBot.SendMessage(M);
+            M.ChatId = Ass.TgId;
+            tgBot.SendMessage(M);
+            return;
+          }
+
+        M.Text = "Pair not found";
+        vkBot.SendMessage(M);
+      }
+
       if (message.Text.Contains("!pic"))
       {
         OpenFileDialog ofd = new OpenFileDialog();
@@ -84,8 +121,11 @@ cake#1477; Vk:11, Tg:47
           From = message.From
         });
       }
-      message.Text = message.From + " сказал:\r\n" + message.Text;
-      vkBot.SendMessage(message);
+      if (VkToTg.ContainsKey(message.ChatId))
+      {
+        message.ChatId = ((Association)VkToTg[message.ChatId]).TgId;
+        tgBot.SendMessage(message);
+      }
       //if (msg.Attachments.First().Type == AttachmentsType.Sticker)
       //  vkBot.GetImage(msg.Attachments.First()).Save("ALLAH.PNG");
     }
@@ -100,6 +140,13 @@ cake#1477; Vk:11, Tg:47
 
         Association NewAss = new Association();
         NewAss.BethesdaName = msg.Text.Substring(msg.Text.LastIndexOf("/start ") + "/start ".Length);
+        if (NewAss.BethesdaName.Trim() == "")
+        {
+          M.Text = "Associaion name shouldn't be empty";
+          tgBot.SendMessage(M);
+          return;
+        }
+
         NewAss.TgId = msg.ChatId;
         NewAss.VkId = -1;
 
@@ -136,7 +183,12 @@ cake#1477; Vk:11, Tg:47
         
       }
 
-      tgBot.SendMessage(msg);
+      if (TgToVk.ContainsKey(msg.ChatId))
+      {
+        msg.ChatId = ((Association)TgToVk[msg.ChatId]).VkId;
+        msg.Text = msg.From + "\n" + msg.Text;
+        vkBot.SendMessage(msg);
+      }
     }
 
     public void Run()
