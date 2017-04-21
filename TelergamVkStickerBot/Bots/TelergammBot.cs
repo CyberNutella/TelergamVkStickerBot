@@ -111,7 +111,7 @@ namespace TelergamVkStickerBot.Bots
 
     public async Task SendMessage( Message M )
     {
-      await Api.SendTextMessageAsync(M.ChatId, M.From + "\n" + M.Text);
+      await Api.SendTextMessageAsync(M.ChatId, M.From + "\n" + M.Text, false, false, 0, null, ParseMode.Html);
 
       foreach (Attachment Att in M.Attachments)
       {

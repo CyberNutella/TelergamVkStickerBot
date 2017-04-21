@@ -115,7 +115,7 @@ cake#1477; Vk:11, Tg:47
         {
           Attachments = new List<Attachment>()
           {
-            vkBot.CreateAttachment(img, message.ChatId)
+            //vkBot.CreateAttachment(img)
           },
           ChatId = message.ChatId,
           From = message.From
@@ -132,6 +132,9 @@ cake#1477; Vk:11, Tg:47
 
     public void TgMessageCallblack(Message msg)
     {
+      // 4l3r7 КОСТЫЛЬ
+      if (msg.Text == null)
+        msg.Text = "";
       if (msg.Text.StartsWith("/start ") && !msg.Text.Contains('#'))
       {
         Message M = new Message();
@@ -187,6 +190,8 @@ cake#1477; Vk:11, Tg:47
       {
         msg.ChatId = ((Association)TgToVk[msg.ChatId]).VkId;
         msg.Text = msg.From + "\n" + msg.Text;
+        //tgBot.DownloadAttachments(msg).Wait();
+        //vkBot.UploadAttachments(msg);
         vkBot.SendMessage(msg);
       }
     }

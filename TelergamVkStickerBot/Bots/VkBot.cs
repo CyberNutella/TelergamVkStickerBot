@@ -127,16 +127,37 @@ namespace TelergamVkStickerBot.Bots
       return a;
     }
 
-    private VkApi api = new VkApi(new FormCaptcha());
+    private VkApi Api = new VkApi(new FormCaptcha());
 
     public Action<Message> MessageCallblack = (Message m) => { };
 
     MessagesGetLongPollHistoryParams LongPollParams = new MessagesGetLongPollHistoryParams();
 
+    private VkNet.Model.Attachments.Photo UploadAttachmentPhoto( string имяФайла )
+    {
+      UploadServerInfo serverInfo = Api.Photo.GetMessagesUploadServer();
+      string ответСервера = UploadPhoto(serverInfo.UploadUrl, имяФайла);
+      var хуй = Api.Photo.SaveMessagesPhoto(ответСервера);
+      return хуй.First();
+    }
+
+    public void UploadAttachments( Message message )
+    {
+      for (int i = 0; i < message.Attachments.Count; i++)
+      {
+        switch (message.Attachments[i].Type)
+        {
+         case AttachmentsType.Image:
+           message.Attachments[i].RepresentationVk = UploadAttachmentPhoto(message.Attachments[i].FileName);
+           break;
+        }
+      }
+    }
+
     public VkBot()
     {
       // Authorize
-      api.Authorize(new ApiAuthParams()
+      Api.Authorize(new ApiAuthParams()
       {
         ApplicationId = 5977261,
         Login = Properties.Settings.Default.VkLogin,
@@ -146,7 +167,7 @@ namespace TelergamVkStickerBot.Bots
       // Get last message
       // пиздец извращение ? значит, что переменная может быть равна null
       // как id может быть null - непонятно
-      long? lastId = api.Messages.Get(new MessagesGetParams()
+      long? lastId = Api.Messages.Get(new MessagesGetParams()
         {
           Out = MessageType.Received,
           Count = 1
@@ -157,7 +178,7 @@ namespace TelergamVkStickerBot.Bots
       if (!lastId.HasValue)
         throw new ZeigHeil();
 
-      LongPollServerResponse serv = api.Messages.GetLongPollServer(true, true);
+      LongPollServerResponse serv = Api.Messages.GetLongPollServer(true, true);
       LongPollParams.Pts = serv.Pts;
       LongPollParams.Ts = serv.Ts;
       LongPollParams.PreviewLength = 0;
@@ -194,9 +215,10 @@ namespace TelergamVkStickerBot.Bots
       msg.Message = message.Text;
       List<MediaAttachment> l = new List<MediaAttachment>();
       foreach (Attachment attachment in message.Attachments)
-        l.Add(attachment.RepresentationVk);
+        if (attachment.RepresentationVk != null)
+          l.Add(attachment.RepresentationVk);
       msg.Attachments = l;
-      api.Messages.Send(msg);
+      Api.Messages.Send(msg);
     }
 
     private int N;
@@ -206,15 +228,15 @@ namespace TelergamVkStickerBot.Bots
       Attachment a = new Attachment();
       a.Type = AttachmentsType.Sticker;
       image.Save("temp_" + N.ToString() + ".png", ImageFormat.Png);
-      string serverAddress = api.Call("docs.getUploadServer", new VkParameters()
+      string serverAddress = Api.Call("docs.getUploadServer", new VkParameters()
         {
           {"type", "graffiti"},
-          {"access_token", api.Token}
+          {"access_token", Api.Token}
         })["upload_url"]
         .ToString();
       // Load file
       string file = UploadFile(serverAddress, "temp_" + N.ToString() + ".png");
-      var graf = JObject.Parse(api.Call("docs.save", new VkParameters()
+      var graf = JObject.Parse(Api.Call("docs.save", new VkParameters()
           {
             {"file", file},
             {"title", "graffiti.png"}
@@ -235,21 +257,7 @@ namespace TelergamVkStickerBot.Bots
       a.RepresentationVk = graffiti;
       a.FileName = new Uri(graffiti.Uri).OriginalString;
       return a;
-    }
-
-    public Attachment CreateAttachment(Image image, long ChatId)
-    {
-      Attachment a = new Attachment();
-      a.Type = AttachmentsType.Image;
-      UploadServerInfo serverInfo = api.Photo.GetMessagesUploadServer();
-      image.Save("temp_" + N.ToString() + ".png", ImageFormat.Png);
-      string file = UploadPhoto(serverInfo.UploadUrl, "temp_" + N.ToString() + ".png");
-      N++;
-      var blyat = api.Photo.SaveMessagesPhoto(file);
-      a.RepresentationVk = blyat.First();
-      a.FileName = GetUri((Photo)a.RepresentationVk).OriginalString;
-      return a;
-    }
+    } 
 
     public Image GetImage(Attachment attachment)
     {
@@ -271,12 +279,12 @@ namespace TelergamVkStickerBot.Bots
 
     public void Response()
     {
-      while (DateTime.Now - LastResponse < TimeSpan.FromSeconds(1 / api.RequestsPerSecond + 0.01))
+      while (DateTime.Now - LastResponse < TimeSpan.FromSeconds(1 / Api.RequestsPerSecond + 0.01))
         ;
       LastResponse = DateTime.Now;
-      api.Account.SetOnline(false);
+      Api.Account.SetOnline(false);
 
-      LongPollHistoryResponse longpoll = api.Messages.GetLongPollHistory(LongPollParams);
+      LongPollHistoryResponse longpoll = Api.Messages.GetLongPollHistory(LongPollParams);
 
       LongPollParams.Pts = longpoll.NewPts;
 
@@ -289,14 +297,14 @@ namespace TelergamVkStickerBot.Bots
         Message msg = new Message();
         msg.ChatId = message.ChatId.GetValueOrDefault(-message.UserId.GetValueOrDefault());
         msg.Text = message.Body;
-        User from = api.Users.Get(message.UserId.GetValueOrDefault(), ProfileFields.All);
-        msg.From = from.FirstName + " " + from.LastName;
+        User from = Api.Users.Get(message.UserId.GetValueOrDefault(), ProfileFields.All);
+        msg.From = "<a href=\"https://vk.com/id" + from.Id.ToString() + "\">" + from.FirstName + " " + from.LastName + "</a>";
         foreach (VkNet.Model.Attachments.Attachment attachment in message.Attachments)
           msg.Attachments.Add(TransformAttachment(attachment));
         if (LongPollParams.MaxMsgId < message.Id)
           LongPollParams.MaxMsgId = message.Id.GetValueOrDefault();
         MessageCallblack(msg);
-        api.Messages.MarkAsRead(message.Id.GetValueOrDefault());
+        Api.Messages.MarkAsRead(message.Id.GetValueOrDefault());
       }
     }
   }

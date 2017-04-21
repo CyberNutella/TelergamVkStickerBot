@@ -15,7 +15,7 @@ namespace TelergamVkStickerBot
     File
   }
 
-  public struct Attachment
+  public class Attachment
   {
     public AttachmentsType Type;
     public string FileName;
